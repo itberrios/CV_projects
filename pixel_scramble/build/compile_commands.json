@@ -1,7 +1,0 @@
-[
-{
-  "directory": "C:/Users/itber/Documents/learning/self_tutorials/CV_projects/pixel_scramble/build",
-  "command": "C:\\mingw64\\bin\\g++.exe  @CMakeFiles/pixel_scramble.dir/includes_CXX.rsp -g -o CMakeFiles\\pixel_scramble.dir\\main.cpp.obj -c C:\\Users\\itber\\Documents\\learning\\self_tutorials\\CV_projects\\pixel_scramble\\main.cpp",
-  "file": "C:/Users/itber/Documents/learning/self_tutorials/CV_projects/pixel_scramble/main.cpp"
-}
-]

@@ -1,3 +1,0 @@
-"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\pixel_scramble.dir/objects.a
-C:\mingw64\bin\ar.exe qc CMakeFiles\pixel_scramble.dir/objects.a @CMakeFiles\pixel_scramble.dir\objects1
-C:\mingw64\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\pixel_scramble.dir/objects.a -Wl,--no-whole-archive -o pixel_scramble.exe -Wl,--out-implib,libpixel_scramble.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\pixel_scramble.dir\linkLibs.rsp
