@@ -1,7 +1,6 @@
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
 
 
 class MobileNetV3Backbone(nn.Module):
@@ -12,7 +11,7 @@ class MobileNetV3Backbone(nn.Module):
     
     def forward(self, x):
         """ Passes input theough MobileNetV3 backbone feature extraction layers
-            layers to add connections to
+            layers to add connections to (0 indexed)
                 - 1:  1/4 res
                 - 3:  1/8 res
                 - 7, 8:  1/16 res
@@ -37,9 +36,8 @@ class CRPBlock(nn.Module):
         groups = in_chans if groups else 1
         self.mini_blocks = nn.ModuleList()
         for _ in range(n_stages):
-            self.mini_blocks.append(nn.Conv2d(in_chans, out_chans, kernel_size=1, bias=False, groups=groups))
             self.mini_blocks.append(nn.MaxPool2d(kernel_size=5, stride=1, padding=2))
-
+            self.mini_blocks.append(nn.Conv2d(in_chans, out_chans, kernel_size=1, bias=False, groups=groups))
     
     def forward(self, x):
         out = x
@@ -51,8 +49,10 @@ class CRPBlock(nn.Module):
 
 
 class LightWeightRefineNet(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, extra_light=False):
         super().__init__()
+
+        self.extra_light = extra_light
 
         # 1x1 convs to convert encoder channels to 256
         self.conv1 = nn.Conv2d(96, 256, kernel_size=1, stride=1, bias=False) # 1/32 res
@@ -107,17 +107,20 @@ class LightWeightRefineNet(nn.Module):
         l3 = self.conv_adapt2(l3)
         l3 = nn.Upsample(size=skips['l1_out'].size()[2:], mode='bilinear', align_corners=False)(l3)
 
-        # largest res CRP skip
-        l1 = self.conv6(skips['l1_out'])
-        l1 = self.relu6(l1 + l3)
-        l1 = self.crp4(l1)
+        if self.extra_light:
+            l1 = l3
+        else:
+            # largest res CRP skip
+            l1 = self.conv6(skips['l1_out'])
+            l1 = self.relu6(l1 + l3)
+            l1 = self.crp4(l1)
 
         # pass through output heads
-        out_seg = self.pre_seg(l3)
+        out_seg = self.pre_seg(l1) 
         out_seg = self.relu6(out_seg)
         out_seg = self.seg(out_seg)
 
-        out_depth = self.pre_depth(l3)
+        out_depth = self.pre_depth(l1) 
         out_depth = self.relu6(out_depth)
         out_depth = self.depth(out_depth)
 
@@ -125,11 +128,17 @@ class LightWeightRefineNet(nn.Module):
     
 
 class MultiTaskNetwork(nn.Module):
-    def __init__(self, encoder, decoder):
+    def __init__(self, encoder, decoder, freeze_encoder=True):
         super().__init__()
 
         self.encoder = encoder
         self.decoder = decoder
+        
+        # freeze encoder weights
+        if freeze_encoder:
+            for child in self.encoder.children():
+                for param in child.parameters():
+                    param.requires_grad = False
 
     
     def forward(self, x):

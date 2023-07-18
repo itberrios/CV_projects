@@ -20,7 +20,10 @@ class Normalize(object):
             
         return {'left': TF.normalize(left, self.mean, self.std), 
                 'mask': mask, 
-                'depth' : torch.log(torch.clip(depth, 0, self.max_depth))/self.depth_norm}
+                'depth' : torch.clip( # saftey clip :)
+                            torch.log(torch.clip(depth, 0, self.max_depth))/self.depth_norm, 
+                            0, 
+                            self.max_depth)}
 
 
 class AddColorJitter(object):
@@ -42,13 +45,6 @@ class Rescale(object):
 
     def __init__(self, h, w):
         self.h, self.w = h, w
-
-        # state = torch.get_rng_state() 
-        # self.rescale = transforms.Resize((self.h, self.w))
-
-        # # get  same transform for mask
-        # torch.set_rng_state(state)
-        # self.mask_rescale = transforms.Resize((self.h, self.w), transforms.InterpolationMode.NEAREST)
 
     def __call__(self, sample):
         left, mask, depth = sample['left'], sample['mask'], sample['depth']
@@ -85,20 +81,33 @@ class ToTensor(object):
                 'depth' : transforms.ToTensor()(depth).type(torch.float32)}
     
 
-# class ElasticTransform(object):
-#     def __init__(self, alpha=25.0, sigma=5.0):
-#         self.alpha = [1.0, alpha]
-#         self.sigma = [1, sigma]
+class ElasticTransform(object):
+    def __init__(self, alpha=25.0, sigma=5.0, prob=0.5):
+        self.alpha = [1.0, alpha]
+        self.sigma = [1, sigma]
+        self.prob = prob
 
-#     def __call__(self, sample):
-#         left, mask, depth = sample['left'], sample['mask'], sample['depth']
-#         H, W = mask.shape
+    def __call__(self, sample):
+        
+        if torch.rand(1) < self.prob:
 
-#         displacement = transforms.ElasticTransform.get_params(self.alpha, self.sigma, [H, W])
+            left, mask, depth = sample['left'], sample['mask'], sample['depth']
+            _, H, W = mask.shape
+            displacement = transforms.ElasticTransform.get_params(self.alpha, self.sigma, [H, W])
 
-#         return {'left': TF.elastic_transform(left, displacement), 
-#                 'mask': TF.elastic_transform(mask.unsqueeze(0), displacement, interpolation=TF.InterpolationMode.NEAREST), 
-#                 'depth' : TF.elastic_transform(depth, displacement)}
+            # # TEMP
+            # print(TF.elastic_transform(left, displacement).shape)
+            # print(TF.elastic_transform(mask.unsqueeze(0), displacement, interpolation=TF.InterpolationMode.NEAREST).shape)
+            # print(torch.clip(TF.elastic_transform(depth, displacement), 0, depth.max()).shape)
+
+            return {'left': TF.elastic_transform(left, displacement), 
+                    'mask': TF.elastic_transform(mask.unsqueeze(0), displacement, interpolation=TF.InterpolationMode.NEAREST), 
+                    'depth' : torch.clip(TF.elastic_transform(depth, displacement), 0, depth.max())} 
+        
+        else:
+            return sample
+
+        
     
 
 # new transform to rotate the images
@@ -118,37 +127,32 @@ class RandomRotate(object):
                 'mask': TF.rotate(mask.unsqueeze(0), angle), 
                 'depth' : TF.rotate(depth, angle)}
     
+    
 class RandomHorizontalFlip(object):
-    def __init__(self, prob):
+    def __init__(self, prob=0.5):
         self.prob = prob
 
     def __call__(self, sample):
-        left, mask, depth = sample['left'], sample['mask'], sample['depth']
-
+        
         if torch.rand(1) < self.prob:
+            left, mask, depth = sample['left'], sample['mask'], sample['depth']
             return {'left': TF.hflip(left), 
                     'mask': TF.hflip(mask), 
                     'depth' : TF.hflip(depth)}
-        
         else:
-            return {'left': left, 
-                    'mask': mask, 
-                    'depth' : depth}
+            return sample
         
 
 class RandomVerticalFlip(object):
-    def __init__(self, prob):
+    def __init__(self, prob=0.5):
         self.prob = prob
 
     def __call__(self, sample):
-        left, mask, depth = sample['left'], sample['mask'], sample['depth']
-
         if torch.rand(1) < self.prob:
+            left, mask, depth = sample['left'], sample['mask'], sample['depth']
             return {'left': TF.vflip(left), 
                     'mask': TF.vflip(mask), 
                     'depth' : TF.vflip(depth)}
-        
         else:
-            return {'left': left, 
-                    'mask': mask, 
-                    'depth' : depth}
+            return sample
+        
