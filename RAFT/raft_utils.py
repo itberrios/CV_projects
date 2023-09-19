@@ -53,6 +53,43 @@ def inference(model, frame1, frame2, device, pad_mode='sintel',
             return flow_iters
 
 
+def test_inference(model, frame1, frame2, device, pad_mode='sintel',
+                   iters=12, flow_init=None, upsample=True, 
+                   test_pixel=np.array([0,0,0]), test_mode=True):
+    """ Special function to run with test version of RAFT """
+    model.eval()
+    with torch.no_grad():
+        # preprocess
+        frame1 = process_img(frame1, device)
+        frame2 = process_img(frame2, device)
+
+        padder = InputPadder(frame1.shape, mode=pad_mode)
+        frame1, frame2 = padder.pad(frame1, frame2)
+
+        # predict flow
+        if test_mode:
+          model_outputs = model(frame1,
+                                frame2,
+                                iters=iters,
+                                flow_init=flow_init,
+                                upsample=upsample,
+                                test_pixel=test_pixel,
+                                test_mode=test_mode)
+          features, test_responses, motion_features, hidden_states, flow_low, flow_up = model_outputs
+
+          return features, test_responses, motion_features, hidden_states, flow_low, flow_up
+
+        else:
+            flow_iters = model(frame1,
+                               frame2,
+                               iters=iters,
+                               flow_init=flow_init,
+                               upsample=upsample,
+                               test_mode=test_mode)
+
+            return flow_iters
+        
+
 def get_viz(flo):
     flo = flo[0].permute(1,2,0).cpu().numpy()
     return flow_viz.flow_to_image(flo)
