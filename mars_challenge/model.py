@@ -19,7 +19,7 @@ class Network(nn.Module):
         self.corr_radius = corr_radius
         self.device = device
 
-        self.bottle1 = BottleneckBlock(in_planes=324, planes=64, norm_fn='batch', stride=2).to(self.device)
+        # self.bottle1 = BottleneckBlock(in_planes=324, planes=64, norm_fn='batch', stride=2).to(self.device)
 
         self.conv1 = nn.Conv2d(in_channels=324, out_channels=64, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=16, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
@@ -79,7 +79,8 @@ class Network(nn.Module):
 
         out = out.reshape(out.size()[0], -1)
 
-        out = F.leaky_relu(self.norm(self.fc1(out)), 0.01)
+        # out = F.leaky_relu(self.norm(self.fc1(out)), 0.01)
+        out = F.relu(self.norm(self.fc1(out)))
         out = self.fc2(out)
 
         return out.squeeze()

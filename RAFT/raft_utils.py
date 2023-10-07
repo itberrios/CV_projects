@@ -34,12 +34,12 @@ def inference(model, frame1, frame2, device, pad_mode='sintel',
 
         # predict flow
         if test_mode:
-          flow_low, flow_up = model(frame1,
-                                    frame2,
-                                    iters=iters,
-                                    flow_init=flow_init,
-                                    upsample=upsample,
-                                    test_mode=test_mode)
+          _, _, _, _, flow_low, flow_up = model(frame1,
+                                                frame2,
+                                                iters=iters,
+                                                flow_init=flow_init,
+                                                upsample=upsample,
+                                                test_mode=test_mode)
           return flow_low, flow_up
 
         else:
