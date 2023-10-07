@@ -6,20 +6,17 @@ import torch.nn.functional as F
 # add RAFT to core path
 sys.path.append('RAFT/core')
 
-from RAFT.core.extractor import BottleneckBlock
 from RAFT.core.corr import CorrBlock
 from RAFT.core.utils.utils import coords_grid
 
 
 class Network(nn.Module):
-    def __init__(self, fnet, corr_radius=4, freeze_encoder=True, device='cuda'):
+    def __init__(self, fnet, corr_radius=4, freeze_encoder=True, p=0.5, device='cuda'):
         super().__init__()
 
         self.fnet = fnet
         self.corr_radius = corr_radius
         self.device = device
-
-        # self.bottle1 = BottleneckBlock(in_planes=324, planes=64, norm_fn='batch', stride=2).to(self.device)
 
         self.conv1 = nn.Conv2d(in_channels=324, out_channels=64, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=16, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
@@ -29,8 +26,11 @@ class Network(nn.Module):
 
         self.norm1 = nn.BatchNorm2d(num_features=64)
         self.norm2 = nn.BatchNorm2d(num_features=16)
+        self.norm3 = nn.BatchNorm1d(num_features=256).to(self.device)
 
-        self.norm = nn.BatchNorm1d(num_features=256).to(self.device)
+        self.dropout2d_1 = nn.Dropout2d(p=p)
+        self.dropout2d_2 = nn.Dropout2d(p=p)
+        self.dropout1d = nn.Dropout1d(p=p)
 
         # freeze encoder weights
         if freeze_encoder:
@@ -75,12 +75,17 @@ class Network(nn.Module):
 
         # reduce to extract speed estimation
         out = F.relu(self.norm1(self.conv1(corr_features)))
+        out = self.dropout2d_1(out)
         out = F.relu(self.norm2(self.conv2(out)))
+        out = self.dropout2d_2(out)
+
+        # print(out.shape)
 
         out = out.reshape(out.size()[0], -1)
 
-        # out = F.leaky_relu(self.norm(self.fc1(out)), 0.01)
-        out = F.relu(self.norm(self.fc1(out)))
+        # print(out.shape)
+        out = F.relu(self.norm3(self.fc1(out)))
+        out = self.dropout1d(out)
         out = self.fc2(out)
 
         return out.squeeze()

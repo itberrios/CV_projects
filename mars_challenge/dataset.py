@@ -21,6 +21,11 @@ class MarsDataset(Dataset):
         if self.split not in ('train', 'valid', 'test'): 
             self.speed_df = None
             self.root = os.path.join(self.root, "test")
+
+            # precomputed scaling data
+            self.mu = 3.815389814814833
+            self.sig = 2.03681520930107
+
         else:
             self.speed_df = pd.read_csv(os.path.join(self.root, "train.txt"), header=None)
             self.root = os.path.join(self.root, "train")
@@ -42,6 +47,11 @@ class MarsDataset(Dataset):
                 elif (self.split == 'test') and (i == 2):
                     self.speed_df = self.speed_df.iloc[split_indexes[i][0]: split_indexes[i][1]]
                     break
+
+            # compute scaling data
+            self.mu = self.speed_df.mean()[0]
+            self.sig = self.speed_df.std()[0]
+
         
 
     def __getitem__(self, idx):
@@ -61,6 +71,7 @@ class MarsDataset(Dataset):
 
         if self.split in ('train', 'valid', 'test'):
             speed = torch.as_tensor(self.speed_df.iloc[idx + 1][0]).float()
+            speed = self.standardize(speed)
         else:
             speed = None
 
@@ -75,7 +86,12 @@ class MarsDataset(Dataset):
 
 
         return (image1, image2), speed
+    
+    def standardize(self, speed):
+        return (speed - self.mu)/self.sig
 
+    def unstandardize(self, standard_speed):
+        return standard_speed*self.sig + self.mu
 
     def __len__(self):
         """ Returns total length minus 1 to account for 
