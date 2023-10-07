@@ -18,15 +18,14 @@ class Network(nn.Module):
         self.corr_radius = corr_radius
         self.device = device
 
+        # conv layers
         self.conv1 = nn.Conv2d(in_channels=324, out_channels=64, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=16, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
 
-        self.fc1 = nn.Linear(in_features=5376, out_features=256).to(self.device)
-        self.fc2 = nn.Linear(in_features=256, out_features=1).to(self.device)
+        # fully connected layers
+        self.fc1 = nn.Linear(in_features=336, out_features=1).to(self.device)
 
-        self.norm1 = nn.BatchNorm2d(num_features=64)
-        self.norm2 = nn.BatchNorm2d(num_features=16)
-        self.norm3 = nn.BatchNorm1d(num_features=256).to(self.device)
+        self.batch_norm = nn.BatchNorm2d(num_features=64)
 
         self.dropout2d_1 = nn.Dropout2d(p=p)
         self.dropout2d_2 = nn.Dropout2d(p=p)
@@ -74,19 +73,14 @@ class Network(nn.Module):
         corr_features = corr_fn(coords1.detach())
 
         # reduce to extract speed estimation
-        out = F.relu(self.norm1(self.conv1(corr_features)))
+        out = F.relu(self.batch_norm(self.conv1(corr_features)))
         out = self.dropout2d_1(out)
-        out = F.relu(self.norm2(self.conv2(out)))
+        out = F.relu(self.conv2(out))
         out = self.dropout2d_2(out)
-
-        # print(out.shape)
 
         out = out.reshape(out.size()[0], -1)
 
-        # print(out.shape)
-        out = F.relu(self.norm3(self.fc1(out)))
-        out = self.dropout1d(out)
-        out = self.fc2(out)
+        out = self.fc1(out)
 
         return out.squeeze()
     
