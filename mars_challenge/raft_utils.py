@@ -42,6 +42,7 @@ def load_model(weights_path, args):
     model.to("cuda")
     return model
 
+        
 # sketchy class to pass to RAFT
 class Args():
   def __init__(self, model='', path='', small=False, mixed_precision=True, alternate_corr=False):

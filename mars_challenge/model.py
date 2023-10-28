@@ -6,6 +6,7 @@ import torch.nn.functional as F
 # add RAFT to core path
 sys.path.append('RAFT/core')
 
+from RAFT.core.extractor import BottleneckBlock
 from RAFT.core.corr import CorrBlock
 from RAFT.core.utils.utils import coords_grid
 
@@ -19,17 +20,20 @@ class Network(nn.Module):
         self.device = device
 
         # conv layers
-        self.conv1 = nn.Conv2d(in_channels=324, out_channels=64, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
-        self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
+        self.bottle1 = BottleneckBlock(in_planes=324, planes=32, norm_fn='group', stride=2).to(self.device)
+        self.conv1 = nn.Conv2d(in_channels=32, out_channels=1, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
+        # self.conv1 = nn.Conv2d(in_channels=324, out_channels=64, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
+        # self.conv2 = nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=2, dilation=1, padding=0).to(self.device)
 
         # fully connected layers
-        self.fc1 = nn.Linear(in_features=336, out_features=1).to(self.device)
+        self.fc1 = nn.Linear(in_features=352, out_features=1).to(self.device)
 
-        self.batch_norm = nn.BatchNorm2d(num_features=64)
+        # self.norm_1 = nn.GroupNorm(num_groups=2, num_channels=64)
+        # self.norm_1 = nn.GroupNorm(num_groups=2, num_channels=1)
 
-        self.dropout2d_1 = nn.Dropout2d(p=p)
-        self.dropout2d_2 = nn.Dropout2d(p=p)
-        self.dropout1d = nn.Dropout1d(p=p)
+        # self.dropout2d_1 = nn.Dropout2d(p=p)
+        # self.dropout2d_2 = nn.Dropout2d(p=p)
+        # self.dropout1d = nn.Dropout1d(p=p)
 
         # freeze encoder weights
         if freeze_encoder:
@@ -56,7 +60,6 @@ class Network(nn.Module):
         image1 = image1.contiguous()
         image2 = image2.contiguous()
 
-
         # run the feature network
         with torch.autocast(device_type=self.device, enabled=True):
             fmap1, fmap2 = self.fnet([image1, image2])
@@ -72,15 +75,27 @@ class Network(nn.Module):
         # index correlation volume to get correlation features
         corr_features = corr_fn(coords1.detach())
 
+        # TEMP
+        # print(corr_features.shape)
+        # print(self.bottle1(corr_features).shape) # (b, 32, 34, 45)
+
         # reduce to extract speed estimation
-        out = F.relu(self.batch_norm(self.conv1(corr_features)))
-        out = self.dropout2d_1(out)
-        out = F.relu(self.conv2(out))
-        out = self.dropout2d_2(out)
+        # out = F.relu(self.norm_1(self.conv1(corr_features)))
+
+        out = self.bottle1(corr_features)
+        out = F.relu(self.conv1(out))
+        # out = self.dropout2d_1(out)
+        # out = F.relu(self.conv2(out))
+        # out = self.dropout2d_2(out)
+
+        # print(out.shape)
 
         out = out.reshape(out.size()[0], -1)
 
+        # print(out.shape)
+
         out = self.fc1(out)
+        # out = self.dropout1d(out)
 
         return out.squeeze()
     
