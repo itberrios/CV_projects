@@ -12,6 +12,8 @@ from PIL import Image
 
 
 # =============================================================================
+# get bounding box detections from blobs/contours
+
 def get_contour_detections(mask, thresh=400):
     """ Obtains initial proposed detections from contours discoverd on the
         mask. Scores are taken as the bbox area, larger is higher.
@@ -38,6 +40,8 @@ def get_contour_detections(mask, thresh=400):
 
 
 # =============================================================================
+# Non-Max Supression for detected bounding boxes on blobs
+
 def remove_contained_bboxes(boxes):
     """ Removes all smaller boxes that are contained within larger boxes.
         Requires bboxes to be soirted by area (score)
@@ -98,7 +102,7 @@ def non_max_suppression(boxes, scores, threshold=1e-1):
 
 
 # =============================================================================
-# GIF utils
+# plot/display utils
 
 def draw_bboxes(frame, detections):
     for det in detections:
@@ -106,7 +110,24 @@ def draw_bboxes(frame, detections):
         cv2.rectangle(frame, (x1,y1), (x2,y2), (0,255,0), 3)
 
 
-def create_gif_from_images(save_path : str, image_path : str, ext : str) -> None:
+def get_color(number):
+    """ Converts an integer number to a color """
+    # change these however you want to
+    blue = int(number*30 % 256)
+    green = int(number*103 % 256)
+    red = int(number*50 % 256)
+
+    return red, blue, green
+
+
+def plot_points(image, points, radius=3, color=(0,255,0)):
+    for x,y in points:
+        cv2.circle(image, (int(x), int(y)), radius, color, thickness=-1)
+
+    return image
+
+
+def create_gif_from_images(save_path : str, image_path : str, ext : str, duration : int = 50) -> None:
     ''' creates a GIF from a folder of images
         Inputs:
             save_path - path to save GIF
@@ -121,5 +142,6 @@ def create_gif_from_images(save_path : str, image_path : str, ext : str) -> None
     pil_images = [Image.open(im_path) for im_path in image_paths]
 
     pil_images[0].save(save_path, format='GIF', append_images=pil_images,
-                      save_all=True, duration=50, loop=0)
+                       save_all=True, duration=duration, loop=0)
     
+
