@@ -42,7 +42,41 @@ def load_model(weights_path, args):
     model.to("cuda")
     return model
 
-        
+
+def inference(model, frame1, frame2, device, pad_mode='sintel',
+              iters=12, flow_init=None, upsample=True, test_mode=True):
+
+    model.eval()
+    with torch.no_grad():
+        # preprocess
+        frame1 = torch.from_numpy(frame1).permute(2, 0, 1).float()[None].to(device)
+        frame2 = torch.from_numpy(frame2).permute(2, 0, 1).float()[None].to(device)
+
+        padder = InputPadder(frame1.shape, mode=pad_mode)
+        frame1, frame2 = padder.pad(frame1, frame2)
+
+        # predict flow
+        if test_mode:
+          flow_low, flow_up = model(frame1,
+                                    frame2,
+                                    iters=iters,
+                                    flow_init=flow_init,
+                                    upsample=upsample,
+                                    test_mode=test_mode)
+          return flow_low, flow_up
+
+        else:
+            flow_iters = model(frame1,
+                               frame2,
+                               iters=iters,
+                               flow_init=flow_init,
+                               upsample=upsample,
+                               test_mode=test_mode)
+
+            return flow_iters
+
+
+
 # sketchy class to pass to RAFT
 class Args():
   def __init__(self, model='', path='', small=False, mixed_precision=True, alternate_corr=False):
