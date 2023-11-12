@@ -82,7 +82,6 @@ def cra(flow, P, X, index, n_ttl, n_s, thresh=0.01, min_inliers=10000, num_iters
             H - best fit model (6x3) matrix
             best_error - error from best fit model
     """
-
     best_error = 1e10
     H = np.zeros((6, 2)) # 2
     
@@ -109,7 +108,6 @@ def cra(flow, P, X, index, n_ttl, n_s, thresh=0.01, min_inliers=10000, num_iters
         # get Y projected samples [x + u, y + v]^T
         # Ys[:, :] = np.hstack((Ps + Fs, np.ones((n_s, 1))))
         Ys[:, :] = Ps + Fs # 2
-        
             
         # get X polynomial from samples [x^2, y^2, xy, x, y, 1]
         Xs[:, :] = np.array([xs**2, ys**2, xs*ys, xs, ys, np.ones((n_s,))]).T
@@ -142,7 +140,7 @@ def cra(flow, P, X, index, n_ttl, n_s, thresh=0.01, min_inliers=10000, num_iters
             mse_i = np.mean(np.square(Fi - F[inliers, :]), axis=1)
 
             # if current error is better than previous error, save model (H matrix) and error
-            if mse_i.sum() <  best_error:
+            if mse_i.sum() < best_error:
                 best_error = mse_i.sum()
                 H = Hi
 
