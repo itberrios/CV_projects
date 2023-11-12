@@ -32,10 +32,11 @@ def get_sampling_index(w, h, s=50, p=0.5):
     x_index, y_index = np.meshgrid(np.linspace(0, w - 1, w//s).astype(int), # x index
                                    np.linspace(0, h - 1, h//s).astype(int)) # y index
 
-    n_ttl = x_index.shape[0]*y_index.shape[1] # total number of points to sample
-    n_s = int(n_ttl*p) # number of points actually sampled
+    # subtract by 1 to account for random sampling between locations
+    n_ttl = x_index.shape[0]*y_index.shape[1] - 1 # total number of points to sample
+    n_s = int(n_ttl*p) - 1 # number of points actually sampled
 
-    x_index, y_index = x_index.reshape((-1, 1)), y_index.reshape((-1, 1))
+    x_index, y_index = x_index.reshape((-1, 1)), y_index.T.reshape((-1, 1))
 
     index = np.hstack((x_index, y_index))
 
@@ -97,8 +98,10 @@ def cra(flow, P, X, index, n_ttl, n_s, thresh=0.01, min_inliers=10000, num_iters
 
     for _ in range(num_iters):
 
-        ## get (x, y) sample points (Ps)
-        Ps[:, :] = index[np.sort(np.random.choice(np.arange(0, n_ttl), size=n_s , replace=False))]
+        ## get (x, y) pseudo random sample points (Ps)
+        random_index = np.vstack((np.random.uniform(low=index[:-1, 0], high=index[1:, 0]),
+                                  np.random.uniform(low=index[:-1, 1], high=index[1:, 1]))).astype(int).T
+        Ps[:, :] = random_index[np.sort(np.random.choice(np.arange(0, n_ttl), size=n_s , replace=False))]
         xs = Ps[:, 0]
         ys = Ps[:, 1]
 
