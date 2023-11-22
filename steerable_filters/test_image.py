@@ -34,15 +34,15 @@ def f(r):
     return outputs
 
 
-def get_test_image(N):
+def get_test_image(n):
     """ Obtains an NxN test image """
 
     # get image indexes as column vectors
-    x_index, y_index = np.meshgrid(np.arange(0, N), np.arange(0, N))
+    x_index, y_index = np.meshgrid(np.arange(0, n), np.arange(0, n))
     x_index = x_index.reshape((-1, 1))
     y_index = y_index.reshape((-1, 1))
 
     # get radius r
-    r = np.round(np.sqrt((x_index - N//2)**2 + (y_index - N//2)**2)).astype(np.float32).squeeze()
+    r = np.round(np.sqrt((x_index - n//2)**2 + (y_index - n//2)**2)).astype(np.float32).squeeze()
 
-    return f(r).reshape((N, N))
+    return f(r).reshape((n, n))
