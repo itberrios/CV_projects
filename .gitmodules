@@ -1,6 +1,3 @@
-[submodule "RAFT/RAFT"]
-	path = RAFT/RAFT
-	url = https://github.com/princeton-vl/RAFT.git
 [submodule "mars_challenge/RAFT"]
 	path = mars_challenge/RAFT
 	url = https://github.com/princeton-vl/RAFT.git
