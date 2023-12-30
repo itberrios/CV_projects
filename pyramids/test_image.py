@@ -11,7 +11,7 @@ def f0(r):
 
     outputs[r <= 56] = 127
     outputs[index] = 127*np.sin(r[index]/np.pi)
-    outputs[r > 256] = 127
+    outputs[r > 256] = 127 
 
     return outputs
 
@@ -26,9 +26,9 @@ def f1(r, c=8e-4):
 
     index = (r > 28) & (r <= 256)
 
-    outputs[r <= 28] = 127
+    outputs[r <= 28] = 127 # DC center
     outputs[index] = 127*(1 + np.cos(r[index]/(4*np.pi) + (c * (r[index]**2))))
-    outputs[r > 256] = 127
+    outputs[r > 256] = 127 # DC edges
 
     return outputs
 

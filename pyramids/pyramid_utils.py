@@ -12,9 +12,11 @@ def get_polar_grid(h, w):
     # Get grid for cosine ramp function
     h2 = h//2
     w2 = w//2
+
     # Get normalized frequencies (same as fftfreq) [-1, 1)
-    wx, wy = np.meshgrid(np.arange(-(w2), (w2))/(w2), 
-                         np.arange(-(h2), (h2))/(h2))
+    # modulus remainders to account for odd numbers
+    wx, wy = np.meshgrid(np.arange(-w2, w2 + (w % 2))/w2, 
+                         np.arange(-h2, h2 + (h % 2))/h2)
 
     # angular component
     angle = np.arctan2(wy, wx)
