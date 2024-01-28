@@ -102,7 +102,7 @@ def gaussian_pyramid(image, level):
 def mag_colors(rgb_frames, fs, freq_lo, freq_hi, level, alpha):
     """ Function to obtain Amplified Colors in a given list of RGB frames 
         Inputs:
-            rgb_frames - list of RGB video frames
+            rgb_frames - list of RGB uint8 video frames 
             fs - sample frequency
             freq_lo - lower frequency bound
             freq_hi - upper frequency bound
@@ -115,7 +115,7 @@ def mag_colors(rgb_frames, fs, freq_lo, freq_hi, level, alpha):
     num_frames = len(rgb_frames)
 
     # convert frames to YIQ colorspace
-    frames = [rgb2yiq(frame) for frame in rgb_frames]
+    frames = [rgb2yiq(frame/255) for frame in rgb_frames]
 
     ## Get Temporal Filter
     bandpass = signal.firwin(numtaps=num_frames,
