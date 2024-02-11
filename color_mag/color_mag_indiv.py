@@ -191,7 +191,7 @@ if __name__ == '__main__':
     # Optional: Pass arguments directly in script
     # --> Comment this out to receive args from commandline
     args = vars(ap.parse_args(
-        ["--video_path",       r"C:\Users\itber\Documents\learning\self_tutorials\phase_based\videos\face2.mp4", # "videos/eye.avi", # "videos/crane_crop.avi", 
+        ["--video_path",       r"C:\Users\itber\Documents\learning\self_tutorials\phase_based\videos\face2.mp4",
          "--alpha",            "100", 
          "--freq_lo",          "0.83",
          "--freq_hi",          "1.0", 
