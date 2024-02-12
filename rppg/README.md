@@ -1,6 +1,6 @@
 # **Remote PPG (Photoplethysmography)**
 
-In this notebook we will learn how to use Computer Vision to obtain an rPPG. 
+Learn how to use Computer Vision to obtain an rPPG. 
 
 ## **(Brief) Background**
 A [Photoplethysmography](https://www.news-medical.net/health/Photoplethysmography-(PPG).aspx) (PPG) is an optical technique that can detect volumetric changes in blood that correspond to the heart beat. PPGs are typically obtained by a contact optical sensor, but if sufficient lighting conditions are rpesent, we can use a Camera as our sensor and then use Computer Vision techniques to extract the PPG signal remotely.
