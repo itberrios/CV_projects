@@ -40,7 +40,7 @@ def get_face_detections_ssd(net : cv2.dnn.Net,
     predictions = net.forward()
 
     detections = []
-    for i in range(0, 10): # predictions.shape[2]):
+    for i in range(predictions.shape[2]):
         # extract confidence
         confidence = predictions[0, 0, i, 2]
 
@@ -53,8 +53,6 @@ def get_face_detections_ssd(net : cv2.dnn.Net,
             detections.append([x1, y1, x2, y2, confidence])
             
     return detections
-
-
 
 
 def draw_faces_ssd(image : np.ndarray, detections : list, color : tuple = (255, 255, 0)) -> None:

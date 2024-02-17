@@ -27,16 +27,16 @@ _FACE_LANDM = "shape_predictor_68_face_landmarks_GTX.dat"
 FACE_MODEL = os.path.join(MODEL_PATH, _FACE_MODEL)
 FACE_LANDM = os.path.join(MODEL_PATH, _FACE_LANDM)
 
-DEVICE_ID = 0 
-# DEVICE_ID = "/home/iberrios/Documents/projects/color_mag/cap.mp4"
+# DEVICE_ID = 0 
+DEVICE_ID = "short_video.avi"
 
 COLOR = (0, 255, 0)
 
 # drawing Options
-DRAW_FACE_BOXES = True
+DRAW_FACE_BOXES = False
 DRAW_FACE_REGIONS = False
 DRAW_FACE_LANDMARKS = True
-DRAW_FACE_CONTOURS = True
+DRAW_FACE_CONTOURS = False
 MASK_FACE = False
 FULL_SIGNAL_MASK = False # requires MASK_FACE = True
 REGION_SIGNAL_MASK = False
@@ -62,17 +62,16 @@ landmark_predictor = dlib.shape_predictor(FACE_LANDM)
 if __name__ == '__main__':
     cap = cv2.VideoCapture(DEVICE_ID)
 
-    # try to increase base frame rate
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-    cap.set(cv2.CAP_PROP_FPS, 30)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+    # # try to increase base frame rate
+    # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    # cap.set(cv2.CAP_PROP_FPS, 30)
+    # cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
 
     # set input size
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     face_model.setInputSize((w, h))
-
 
     # let camera warmup
     time.sleep(2) 
@@ -89,6 +88,7 @@ if __name__ == '__main__':
     while True:
         # Capture frame-by-frame
         ret, frame = cap.read()
+        
         # if frame is read correctly ret is True
         if not ret:
             print("Can't receive frame Exiting ...")
@@ -175,23 +175,22 @@ if __name__ == '__main__':
 
         # ====================================================================
         # extract signal from frame 
-        # Yes, the drawn lines will impact the signal, this is just a demo
-        blue = frame[:, :, 0]
-        green = frame[:, :, 1]
-        red = frame[:, :, 2]
+        # blue = frame[:, :, 0]
+        # green = frame[:, :, 1]
+        # red = frame[:, :, 2]
 
-        blue = blue.sum()/np.count_nonzero(blue)
-        green = green.sum()/np.count_nonzero(green)
-        red = red.sum()/np.count_nonzero(red)
+        # blue = blue.sum()/np.count_nonzero(blue)
+        # green = green.sum()/np.count_nonzero(green)
+        # red = red.sum()/np.count_nonzero(red)
 
 
-        # draw signal levels on frame
-        cv2.putText(frame, "Red: {:.2f}".format(red), (50, 75),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,255), 3)
-        cv2.putText(frame, "Green: {:.2f}".format(green), (50, 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,255,0), 3)
-        cv2.putText(frame, "Blue: {:.2f}".format(blue), (50, 125),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,128,0), 3)
+        # # draw signal levels on frame
+        # cv2.putText(frame, "Red: {:.2f}".format(red), (50, 75),
+        #         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,255), 3)
+        # cv2.putText(frame, "Green: {:.2f}".format(green), (50, 100),
+        #         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,255,0), 3)
+        # cv2.putText(frame, "Blue: {:.2f}".format(blue), (50, 125),
+        #         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,128,0), 3)
 
         # draw fps on frame
         cv2.putText(frame, "FPS: {:.2f}".format(fps), (50, 25),
@@ -205,6 +204,9 @@ if __name__ == '__main__':
             break
 
         cnt += 1
+
+        # TEMP: slow video down
+        time.sleep(0.01)
 
     # when finished, release the capture
     cap.release()
